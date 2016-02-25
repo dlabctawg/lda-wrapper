@@ -1,1 +1,0 @@
-The GeoRef database, established by the American Geological Institute (AGI) in 1966, provides access to the geoscience literature of the world.

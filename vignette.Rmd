@@ -1,0 +1,58 @@
+---
+title: "CTAWG LDA wrapper"
+date: "February 24, 2016"
+output:
+  html_document:
+    highlight: textmate
+    number_sections: yes
+    toc: yes
+---
+
+```{r init,echo=FALSE}
+cat('\014')
+rm(list=ls())
+source('source.R')
+
+#local defaults
+knitr::opts_chunk$set(eval=TRUE,fig.path='figs') # set eval=FALSE to render only markdown.
+```
+
+#Install
+```{r,eval=F}
+# for topic model
+install.packages(c('stm','SnowballC'))
+
+# for visualization https://github.com/cpsievert/LDAvis
+install.packages(c('devtools','network','shiny','LDAvis','servr'))
+```
+
+
+#Import
+
+```{r import}
+load("107th Congressional Record (ICPSR).RData")
+icpsr2stmbow<-icpsr2stmbow.f(icpsr.cong107,sample.size=20)
+str(icpsr2stmbow)
+```
+
+
+#Model
+
+```{r model}
+stmbow2lda<-stmbow2lda.f(
+	stmbow=icpsr2stmbow
+	,out.dir='output'
+	,k=5
+	,alpha=NULL
+	,visualize.results=T
+	,verbose=T
+)
+```
+
+
+#Visualize
+
+```{r visualize}
+lda2viz<-lda2viz.f(stmbow2lda)
+```
+

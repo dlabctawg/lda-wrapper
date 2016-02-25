@@ -9,3 +9,4 @@ source/inspector.html
 /out
 *.RData
 /vis
+.Rproj.user
