@@ -1,0 +1,42 @@
+Neik would love this guy!
+
+Underwood Goldstone
+
+Wallach; DiMaggio, Nag and Blei
+
+Word embeddings better for training
+
+Teddy Underwood, proceedings of modern language
+
+Bait and Switch ; what can't be reproduced; the actual topic document matrix or what we used, which is the ranked list of the top 30 words.
+
+#AnchorWords
+(a good start) Arora et al 2012, 2013
+
+Throwing the virtues of the model out with the details of its estimation.
+
+Estimation methods waiting to be interpreted.
+
+Topic models is an interpretation waiting to be estimated.
+
+Anchor words big assumption, we should try anchor words with Jake's frequency counting
+
+No document topic distributions
+
+Anchor based models as initialization
+
+#t-SNE projection
+
+multidimensional scaling, project 2d/3d space of words, get better anchor words
+
+#
+Claude Rocchini, Projections onto convex sets
+
+LSI, topic models, word embeddings, brown clusters?
+
+#Q&A
+What is the larger perspective? Enamored of generative process.
+Network connectivity approaches, Lanchieaneti ... 
+
+David Bindel
+Physics Review Lancichnetti High Reproducibility High Accuracy for Automated Topic Clustering

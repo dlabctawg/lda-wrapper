@@ -7,6 +7,6 @@ api
 source/inspector.html
 /in
 /out
-*.RData
 /vis
 .Rproj.user
+.Rhistory

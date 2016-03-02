@@ -1,58 +1,165 @@
 ---
 title: "CTAWG LDA wrapper"
-date: "February 24, 2016"
 output:
-  html_document:
-    highlight: textmate
-    number_sections: yes
-    toc: yes
+ html_document:
+   highlight: textmate
+   keep_md: yes
+   number_sections: yes
+   toc: yes
 ---
 
 ```{r init,echo=FALSE}
 cat('\014')
 rm(list=ls())
-source('source.R')
+graphics.off()
+options(warn=1)
+invisible(source('source.R'))
+library(data.table,quietly = T)
+library(stm,quietly = T)
 
 #local defaults
-knitr::opts_chunk$set(eval=TRUE,fig.path='figs') # set eval=FALSE to render only markdown.
+knitr::opts_chunk$set(
+	eval=TRUE
+#	,fig.path='figs/'
+) # set eval=FALSE to render only markdown.
+std<-F #save.to.disk
+cfso<-T #check.for.saved.output
+od<-'output' #out.dir
+t0<-proc.time()
 ```
 
-#Install
-```{r,eval=F}
-# for topic model
-install.packages(c('stm','SnowballC'))
+In this vignette we demonstrate a practical approach to topic model analysis from start to finish. We wish both to demonstrate the elements of this approach to text analysis in the abstract and to provide practical tools for fitting your own models with your own data. While some aspects of the workflow are data specific, i.e. you may need to construct your own data importer, we provide functions in a logical sequence that if followed helps you not only estimate by understand your topic model. While topic modeling is considered by some to be a form of unsupervised machine learning, we think this is a mistake. This workflow treats topic modeling as a form of computer assisted human learning, and thus you will be asked to perform qualitative cross validation. Simply we believe that topic modeling is not a substite for your own reading of texts, but rather a research assistant that can improve the speed and accuracy of your content analysis.
 
-# for visualization https://github.com/cpsievert/LDAvis
-install.packages(c('devtools','network','shiny','LDAvis','servr'))
+#The Idea of a Topic Model
+
+Topic modeling is a way of theoretically conceptualizing and empirically estimating a process by which authors "write" documents, or, in a more true to method characterization, how authors draw on different available vocabularies for communicating. Topic modeling does not model ideas, but how words hang together in clusters, and how authors draw on those clusters to compose texts. Topic modeling is often associated with a method of estimation called LDA, or latent Dirichelet allocation. An LDA style model has two components:
+
+ - A *document by topic* matrix of probabilities, which describes generically how words in a text are in aggregate distributed across a set of topics. This is often scaled such that each document's vector of topic probabilities sums to one. 
+ - A *topic by term* matrix of probabilities, which describes how each topic is composed of particular words, normally scaled so a topic's word vector sums to one. Simulation of a text from this matrix would represent the word frequency distribution of the "average document" in the corpus.
+ - From these two basic elements the joint probability that a particular word in a particular document is drawn from a particular topic is given by the *topic by document by token* array. Here each document is represented as a *topic by token* matrix that sums to one, and represents how the total population of term-instances (tokens) in a given text is distributed across topic origins.
+
+Theoretically, each token comes from only a single topic. Empirically, the topical origin of any given token, a word in a text, is a matter of great uncertainty, since in a typical topic model it has a nontrivial chance of coming from several topics. This is the "L" in LDA, as it is assumed that the process of document creation, the choice of a topic and then a word, is hidden from us, as we only observed the text as a finished product. Note that even in our own software naming conventions we tend to use "word" rather than the more precise "term" and "token". We hope the meaning is clear from context.
+
+
+#The 107th Congressional Record
+
+As a case study we have a record of floor speeches from the 107th Congress covering nearly the entire calender years 2001 and 2002. While these texts are public record, we exploit an [ICPSR project by Mathew Gentzko and Jesse Shapiro](http://www.icpsr.umich.edu/icpsrweb/ICPSR/studies/33501) that matches the speeches with identifying information about the speakers who were congresspeople. We have parsed the original text delimited databases into an R data frame.
+
+#Install
+
+Installing `stm` with dependencies and suggestions will also install other important packages, namely `tm` and `SnowballC`. `data.table` is a high performance analogue to `data.frame` that allows scalable and memory efficient operations. Only the first line of packages are necessary. The full text annotator relies only on base R graphics, however if you want to play with the extended visualizations then you'll need to install the second line of packages as well.
+
+```{r,eval=F}
+if(F){
+	# for topic model
+	install.packages(c('stm','data.table'))
+	
+	# for extra visualization tools https://github.com/cpsievert/LDAvis
+	install.packages(c('devtools','network','shiny','LDAvis','servr'))
+}
 ```
 
 
 #Import
 
-```{r import}
+Load ICPSR data.
+```{r import1}
 load("107th Congressional Record (ICPSR).RData")
-icpsr2stmbow<-icpsr2stmbow.f(icpsr.cong107,sample.size=20)
-str(icpsr2stmbow)
+str(icpsr.cong107,max.level = 3,list.len = 5)
 ```
 
+Pre-processing according to stm defaults.
+```{r}
+icpsr2stmbow<-icpsr2stmbow.f(
+	icpsr.cong107
+	,sample.size=10000
+	,out.dir = od
+	,save.to.disk=std
+	,check.for.saved.output=T
+)
+samp<-browse.icpsr(
+	icpsr = icpsr.cong107
+	,speechID = names(icpsr2stmbow$documents)
+)
+str(icpsr2stmbow,max.level = 3,list.len = 5)
+```
 
-#Model
-
-```{r model}
-stmbow2lda<-stmbow2lda.f(
-	stmbow=icpsr2stmbow
-	,out.dir='output'
-	,k=5
-	,alpha=NULL
-	,visualize.results=T
-	,verbose=T
+An alternate format for original document recovery.
+```{r import2}
+ftxt2stmbow<-ftxt2stmbow.f(
+	string=samp$speech
+	,save.to.disk=std
+	,check.for.saved.output=cfso
+	,out.dir = od
 )
 ```
 
 
-#Visualize
-
-```{r visualize}
-lda2viz<-lda2viz.f(stmbow2lda)
+#Model
+```{r model}
+stmbow2lda<-stmbow2lda.f(
+	stmbow=ftxt2stmbow
+	,out.dir=od
+	,k=100
+	,alpha=NULL
+	,visualize.results=T
+	,verbose=F
+	,save.to.disk=std
+	,check.for.saved.output=cfso
+)
 ```
 
+
+#Inspect
+```{r inspect}
+setkey(samp,speechID)
+findThoughts(stmbow2lda$model,texts=samp[names(icpsr2stmbow$documents),speech],n=1,topics=1:5)
+```
+
+
+#Visualize
+```{r visualize,eval=T,dev='svg',fig.align='center',error=T,fig.width=8,fig.height=19.4}
+source('source.R')
+lda2rel<-lda2rel.f(
+	stmbow2lda = stmbow2lda
+	,R = 20
+	,lambda.step = 0.5
+	,reorder.topics = F
+	,out.dir=od
+	,save.to.disk=std
+	,check.for.saved.output=cfso
+)
+ftxt2stmbow<-ftxt2stmbow.f(
+	string=samp$speech
+	,save.to.disk=std
+	,check.for.saved.output=cfso
+	,out.dir=od
+)
+for(seed in 2){
+	set.seed(seed)
+	m<-lda2ftxt.f(
+		map=ftxt2stmbow$map
+		,doc.top=stmbow2lda$doc.top.theta
+		,top.word=stmbow2lda$top.word.phi.beta
+		,lda2rel=lda2rel
+		,intensify=T
+		,intensity=0.2
+		,index=sort(sample(1:length(ftxt2stmbow$map),3))[1]
+		,out.dir=paste(od,seed,sep=.Platform$file.sep)
+		,axes=F
+		,spacing=.3
+		,pdf=T
+	)
+}
+t1<-proc.time()
+t1-t0
+```
+
+```{r netviz,eval=F}
+lda2netviz<-lda2netviz.f(stmbow2lda = stmbow2lda)
+```
+
+
+```{r LDAvis,eval=F}
+lda2viz<-lda2viz.f(stmbow2lda)
+```
